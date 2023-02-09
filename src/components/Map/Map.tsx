@@ -1,33 +1,48 @@
-import React from "react";
-
-import { MapContainer, Marker, Popup, TileLayer } from "react-leaflet";
+import React, {useContext, useEffect, useState} from 'react';
+import {MapContainer, Marker, Popup, TileLayer} from "react-leaflet";
 import '../../utils/fix-map-icon';
+import {SearchContext} from "../../contexts/search.context";
+import {SimpleAdEntity} from 'types';
+//import {apiUrl} from "../../config/api";
+//import { SingleAd } from './SingleAd';
 
 import 'leaflet/dist/leaflet.css';
 import './Map.css';
+import { SingleAd } from './SingleAd';
 
 export const Map = () => {
+    const {search} = useContext(SearchContext);
+    const [ads, setAds] = useState<SimpleAdEntity[]>([]);
+
+    useEffect(() => {
+        (async () => {
+
+            const res = await fetch(`http://localhost:3001/ad/search/${search}`);
+            const data = await res.json();
+
+            setAds(data);
+
+        })();
+    }, [search]);
+
     return (
         <div className="map">
-            <MapContainer center={[48.8353952,9.3221945]} zoom={13}>
+            <MapContainer center={[50.2657152,18.9945008]} zoom={13}>
                 <TileLayer
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"    
+                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     attribution="&copy; <a href='https://www.openstreetmap.org/copyright'>OpenStreetMap</a> & contributors"
                 />
-                <Marker position={[48.8353952,9.3221945]}>
-                    <Popup>
-                        <h2>ALS 65</h2>
-                        <p>my house</p>
-                    </Popup>
-                </Marker>
 
-                <Marker position={[49.975355, 20.910033]}>
-                    <Popup>
-                        <h2>Domek</h2>
-                        <p>my house in Poland</p>
-                    </Popup>
-                </Marker>
+                {
+                    ads.map(ad => (
+                        <Marker key={ad.id} position={[ad.lat, ad.lon]}>
+                            <Popup>
+                              <SingleAd id={ad.id} />
+                            </Popup>
+                        </Marker>
+                    ))
+                }
             </MapContainer>
         </div>
-    )
-}
+    );
+};
